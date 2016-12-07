@@ -40,7 +40,6 @@ import com.palantir.atlasdb.transaction.api.Transaction;
 import com.palantir.atlasdb.transaction.api.TransactionManager;
 import com.palantir.common.base.Throwables;
 import com.palantir.util.ByteArrayIOStream;
-import com.palantir.util.file.DeleteOnCloseFileInputStream;
 
 public abstract class AbstractGenericStreamStore<ID> implements GenericStreamStore<ID> {
     protected static final Logger log = LoggerFactory.getLogger(AbstractGenericStreamStore.class);
@@ -101,9 +100,31 @@ public abstract class AbstractGenericStreamStore<ID> implements GenericStreamSto
             loadSingleBlockToOutputStream(transaction, id, 0, ios);
             return ios.getInputStream();
         } else {
-            File file = loadToNewTempFile(transaction, id, metadata);
-            return new DeleteOnCloseFileInputStream(file);
+            return makeStream(id, metadata);
         }
+    }
+
+    private InputStream makeStream(ID id, StreamMetadata metadata) {
+        BlockGetter pageRefresher =
+                (firstBlock, numBlocks, outputStream) ->
+                    txnMgr.runTaskReadOnly(txn -> {
+                        for (int i = 0; i < numBlocks; i++) {
+                            loadSingleBlockToOutputStream(txn, id, firstBlock + i, outputStream);
+                        }
+                        return null;
+                    });
+        long numBlocks = getNumberOfBlocksFromMetadata(metadata);
+        int blocksInMemory = numberOfBlocksThatFitInMemory();
+        try {
+            return BlockConsumingInputStream.create(pageRefresher, numBlocks, blocksInMemory);
+        } catch (IOException e) {
+            throw Throwables.throwUncheckedException(e);
+        }
+    }
+
+    private int numberOfBlocksThatFitInMemory() {
+        long blocksInMemory = getInMemoryThreshold() / BLOCK_SIZE_IN_BYTES;
+        return Math.max(1, (int) blocksInMemory);
     }
 
     @Override
