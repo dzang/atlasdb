@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.CheckForNull;
 import javax.annotation.Generated;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +37,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingInputStream;
 import com.google.common.primitives.Ints;
 import com.google.protobuf.ByteString;
@@ -258,7 +258,7 @@ public final class StreamTestWithHashStreamStore extends AbstractPersistentStrea
         try (InputStream blockStream = makeStream(id, metadata);
                 InputStream decompressingStream = new LZ4BlockInputStream(blockStream);
                 OutputStream fileStream = fos;) {
-            IOUtils.copy(decompressingStream, fileStream);
+            ByteStreams.copy(decompressingStream, fileStream);
         }
     }
 
@@ -449,6 +449,7 @@ public final class StreamTestWithHashStreamStore extends AbstractPersistentStrea
      * {@link Builder}
      * {@link ByteArrayIOStream}
      * {@link ByteArrayInputStream}
+     * {@link ByteStreams}
      * {@link ByteString}
      * {@link Cell}
      * {@link CheckForNull}
@@ -466,7 +467,6 @@ public final class StreamTestWithHashStreamStore extends AbstractPersistentStrea
      * {@link Generated}
      * {@link HashMultimap}
      * {@link IOException}
-     * {@link IOUtils}
      * {@link ImmutableMap}
      * {@link ImmutableSet}
      * {@link InputStream}

@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.CheckForNull;
 import javax.annotation.Generated;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +51,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingInputStream;
 import com.google.common.primitives.Ints;
 import com.google.protobuf.ByteString;
@@ -620,7 +620,7 @@ public class StreamStoreRenderer {
                     line("try (InputStream blockStream = makeStream(id, metadata);");
                     line("        InputStream decompressingStream = new LZ4BlockInputStream(blockStream);");
                     line("        OutputStream fileStream = fos;) {"); {
-                        line("IOUtils.copy(decompressingStream, fileStream);");
+                        line("ByteStreams.copy(decompressingStream, fileStream);");
                     } line("}");
                 } line("}");
             }
@@ -826,6 +826,6 @@ public class StreamStoreRenderer {
         LZ4BlockInputStream.class,
         Pair.class,
         Functions.class,
-        IOUtils.class,
+        ByteStreams.class,
     };
 }
